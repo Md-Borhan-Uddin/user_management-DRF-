@@ -1,5 +1,5 @@
 from rest_framework.views import APIView
-from rest_framework import generics, mixins
+from rest_framework import generics, mixins, status
 from rest_framework.response import Response
 
 from account.models import User
@@ -20,7 +20,8 @@ class UserSignUpAPIView(APIView):
             {
                 "refresh": str(token),
                 "access": str(token.access_token),  # type: ignore
-            }
+            },
+            status=status.HTTP_201_CREATED,
         )
 
 
@@ -34,16 +35,12 @@ class UserUpdateDestroyAPIView(
 ):
     queryset = User.objects.all()
     serializer_class = UserUpdateSerializer
-    
-    
+
     def put(self, request, *args, **kwargs):
         return self.update(request, args, kwargs)
-    
-    
+
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, args, kwargs)
-    
+
     def patch(self, request, *args, **kwargs):
         return self.partial_update(request, args, kwargs)
-    
-    
