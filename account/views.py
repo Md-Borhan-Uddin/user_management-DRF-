@@ -1,19 +1,13 @@
 from rest_framework.views import APIView
-from rest_framework.generics import ListCreateAPIView
+from rest_framework import generics, mixins
 from rest_framework.response import Response
 
 from account.models import User
-from account.serializers import MyTokenObtainPairSerializer, UserSignUpSerializer
-
-from rest_framework_simplejwt.tokens import RefreshToken
-
-def get_tokens_for_user(user):
-    refresh = RefreshToken.for_user(user)
-
-    return {
-        'refresh': str(refresh),
-        'access': str(refresh.access_token), # type: ignore
-    }
+from account.serializers import (
+    MyTokenObtainPairSerializer,
+    UserSignUpSerializer,
+    UserUpdateSerializer,
+)
 
 
 class UserSignUpAPIView(APIView):
@@ -22,12 +16,34 @@ class UserSignUpAPIView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         token = MyTokenObtainPairSerializer.get_token(user)
-        return Response({
-        'refresh': str(token),
-        'access': str(token.access_token), # type: ignore
-    })
+        return Response(
+            {
+                "refresh": str(token),
+                "access": str(token.access_token),  # type: ignore
+            }
+        )
 
 
-class UserListCreateAPIView(ListCreateAPIView):
+class UserListCreateAPIView(generics.ListCreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSignUpSerializer
+
+
+class UserUpdateDestroyAPIView(
+    mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.GenericAPIView
+):
+    queryset = User.objects.all()
+    serializer_class = UserUpdateSerializer
+    
+    
+    def put(self, request, *args, **kwargs):
+        return self.update(request, args, kwargs)
+    
+    
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, args, kwargs)
+    
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, args, kwargs)
+    
+    
